@@ -93,11 +93,26 @@
     </footer>
 
     <script>
-        fetch('/api/students')
-            .then(res => res.json())
-            .then(students => {
+        async function loadPreviewStudents() {
+            let students = null;
+            try {
+                let res = await fetch('/api/students');
+                if (!res.ok) res = await fetch('/students-data.json');
+                students = await res.json();
+            } catch (e) {
+                try {
+                    const fallbackRes = await fetch('/students-data.json');
+                    students = await fallbackRes.json();
+                } catch (err) {
+                    console.error('Failed to load preview:', err);
+                }
+            }
+
+            if (Array.isArray(students) && students.length > 0) {
                 const preview = document.getElementById('previewGrid');
-                preview.innerHTML = students.slice(0, 6).map(s => `
+                preview.innerHTML = students.slice(0, 6).map(s => {
+                    const univ = s.targetUniv || s.targetUni || 'PTN Unggulan';
+                    return `
                     <a href="/student/${s.id}" class="student-card">
                         <div>
                             <div class="card-top">
@@ -109,20 +124,22 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <p class="card-motto">"${s.motto}"</p>
+                                <p class="card-motto">"${s.motto || 'Terus belajar dan berprestasi'}"</p>
                                 <div class="card-tags">
                                     <div class="card-tag-item"><span class="icon">🎯</span><span class="text">${s.dream}</span></div>
-                                    <div class="card-tag-item"><span class="icon">🏛️</span><span class="text">${s.targetUniv}</span></div>
+                                    <div class="card-tag-item"><span class="icon">🏛️</span><span class="text">${univ}</span></div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
-                            <span>${s.mbti} • ${s.zodiac}</span>
+                            <span>${s.mbti || '12F'} • ${s.zodiac || 'IPAS'}</span>
                             <span class="card-view-link">Profil Detail →</span>
                         </div>
                     </a>
-                `).join('');
-            });
+                `}).join('');
+            }
+        }
+        window.addEventListener('DOMContentLoaded', loadPreviewStudents);
     </script>
 </body>
 </html>

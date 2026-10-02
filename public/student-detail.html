@@ -145,40 +145,45 @@
                 return;
             }
 
+            const newCheer = {
+                id: 'msg_' + Date.now(),
+                sender: senderName,
+                role: senderRole,
+                reactionEmoji: selectedEmoji,
+                emoji: selectedEmoji,
+                message: message,
+                text: message,
+                timestamp: 'Baru saja'
+            };
+
+            // Save to localStorage immediately
             try {
-                const response = await fetch(`/api/students/${studentId}/cheers`, {
+                const storageKey = 'cheers_' + studentId;
+                const localCheers = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                localCheers.unshift(newCheer);
+                localStorage.setItem(storageKey, JSON.stringify(localCheers));
+            } catch (e) {}
+
+            if (!currentStudent.cheers) currentStudent.cheers = [];
+            currentStudent.cheers.unshift(newCheer);
+            renderCheersList(currentStudent.cheers);
+            document.getElementById('cheerMessage').value = '';
+            showToast('Pesan semangat berhasil dikirim untuk ' + currentStudent.nickname + '! 🎉', '💌');
+
+            // Send to server in background
+            try {
+                await fetch(`/api/students/${studentId}/cheers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         sender: senderName,
-                        senderName: senderName,
                         role: senderRole,
-                        senderRole: senderRole,
                         reactionEmoji: selectedEmoji,
-                        emoji: selectedEmoji,
-                        message: message,
-                        text: message
+                        message: message
                     })
                 });
-
-                if (response.ok) {
-                    const resData = await response.json();
-                    const newCheer = resData.cheer || resData.message || {
-                        sender: senderName,
-                        role: senderRole,
-                        reactionEmoji: selectedEmoji,
-                        message: message,
-                        timestamp: 'Baru saja'
-                    };
-                    if (!currentStudent.cheers) currentStudent.cheers = [];
-                    currentStudent.cheers.unshift(newCheer);
-                    renderCheersList(currentStudent.cheers);
-                    document.getElementById('cheerMessage').value = '';
-                    showToast('Pesan semangat berhasil dikirim untuk ' + currentStudent.nickname + '! 🎉', '💌');
-                }
             } catch (err) {
-                console.error(err);
-                showToast('Gagal mengirim pesan.', '❌');
+                console.warn('Cheer synced locally, background network failed:', err);
             }
         }
 
@@ -215,10 +220,46 @@
 
         async function loadStudentProfile() {
             try {
-                const res = await fetch(`/api/students/${studentId}`);
-                if (!res.ok) throw new Error('Data siswa tidak ditemukan');
-                const data = await res.json();
+                let data = null;
+                try {
+                    const res = await fetch(`/api/students/${studentId}`);
+                    if (res.ok) {
+                        data = await res.json();
+                    }
+                } catch (e) {
+                    console.warn('API error, falling back to static dataset:', e);
+                }
+
+                if (!data || !data.student) {
+                    const fallbackRes = await fetch('/students-data.json');
+                    const allStudents = await fallbackRes.json();
+                    const sid = parseInt(studentId);
+                    const s = allStudents.find(item => item.id === sid);
+                    if (!s) throw new Error('Data siswa tidak ditemukan');
+
+                    const currIdx = allStudents.findIndex(item => item.id === sid);
+                    const prev = currIdx > 0 ? { id: allStudents[currIdx - 1].id, name: allStudents[currIdx - 1].name, nickname: allStudents[currIdx - 1].nickname } : null;
+                    const next = currIdx < allStudents.length - 1 ? { id: allStudents[currIdx + 1].id, name: allStudents[currIdx + 1].name, nickname: allStudents[currIdx + 1].nickname } : null;
+
+                    data = {
+                        student: { ...s, cheers: s.cheers || [] },
+                        prevStudent: prev,
+                        nextStudent: next,
+                        totalStudents: allStudents.length
+                    };
+                }
+
                 currentStudent = data.student;
+
+                // Merge local cheers
+                try {
+                    const localCheers = JSON.parse(localStorage.getItem('cheers_' + studentId) || '[]');
+                    if (localCheers.length > 0) {
+                        const existingIds = new Set((currentStudent.cheers || []).map(c => c.id));
+                        const uniqueLocal = localCheers.filter(c => !existingIds.has(c.id));
+                        currentStudent.cheers = [...uniqueLocal, ...(currentStudent.cheers || [])];
+                    }
+                } catch (e) {}
 
                 document.title = `${currentStudent.name} - 12F IPAS SMAN 1 Jogorogo`;
 

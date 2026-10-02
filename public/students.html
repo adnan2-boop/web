@@ -86,12 +86,25 @@
 
         async function fetchStudents() {
             try {
-                const res = await fetch('/api/students');
+                let res = await fetch('/api/students');
+                if (!res.ok) {
+                    res = await fetch('/students-data.json');
+                }
                 allStudents = await res.json();
+                if (!Array.isArray(allStudents) || allStudents.length === 0) {
+                    throw new Error('Data format invalid');
+                }
                 renderStudents(allStudents);
             } catch (err) {
-                console.error('Error loading students:', err);
-                document.getElementById('studentsGrid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">Gagal memuat data siswa.</div>';
+                console.warn('API error, attempting fallback to static JSON:', err);
+                try {
+                    const fallbackRes = await fetch('/students-data.json');
+                    allStudents = await fallbackRes.json();
+                    renderStudents(allStudents);
+                } catch (fallbackErr) {
+                    console.error('Error loading students:', fallbackErr);
+                    document.getElementById('studentsGrid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">Gagal memuat data siswa. Silakan segarkan halaman.</div>';
+                }
             }
         }
 
@@ -115,13 +128,13 @@
 
         function matchesCategory(student, cat) {
             if (cat === 'all') return true;
-            const text = (student.role + ' ' + student.dream + ' ' + student.targetMajor).toLowerCase();
+            const text = ((student.role || '') + ' ' + (student.dream || '') + ' ' + (student.targetMajor || '') + ' ' + (student.targetUniv || '')).toLowerCase();
             if (cat === 'pengurus') return !student.role.includes('Anggota');
             if (cat === 'medis') return /dokter|farmasi|gizi|kesehatan|fisioterapi|medis/.test(text);
-            if (cat === 'tech') return /software|informatika|ai|it|robotika|game|sistem/.test(text);
-            if (cat === 'sains') return /bioteknologi|astronomi|fisika|kimia|biologi|riset|lingkungan/.test(text);
-            if (cat === 'seni') return /arsitek|desain|animasi|sinematografi|musik/.test(text);
-            if (cat === 'sosial') return /hukum|bisnis|manajemen|diplomat|psikologi|ekonomi/.test(text);
+            if (cat === 'tech') return /software|informatika|ai|it|robotika|game|sistem|komputer/.test(text);
+            if (cat === 'sains') return /bioteknologi|astronomi|fisika|kimia|biologi|riset|lingkungan|sains/.test(text);
+            if (cat === 'seni') return /arsitek|desain|animasi|sinematografi|musik|seni|dkv/.test(text);
+            if (cat === 'sosial') return /hukum|bisnis|manajemen|diplomat|psikologi|ekonomi|pemerintahan|hubungan/.test(text);
             return true;
         }
 
@@ -130,7 +143,7 @@
             const filtered = allStudents.filter(s => {
                 if (!matchesCategory(s, activeCategory)) return false;
                 if (!query) return true;
-                const pool = (s.name + ' ' + s.nickname + ' ' + s.dream + ' ' + s.targetUniv + ' ' + s.targetMajor + ' ' + s.mbti).toLowerCase();
+                const pool = ((s.name || '') + ' ' + (s.nickname || '') + ' ' + (s.dream || '') + ' ' + (s.targetUniv || '') + ' ' + (s.targetMajor || '') + ' ' + (s.mbti || '') + ' ' + (s.nisn || '')).toLowerCase();
                 return pool.includes(query);
             });
             renderStudents(filtered);
@@ -152,7 +165,10 @@
                 return;
             }
 
-            grid.innerHTML = list.map(s => `
+            grid.innerHTML = list.map(s => {
+                const univ = s.targetUniv || s.targetUni || 'PTN Impian';
+                const major = s.targetMajor || 'Sains Terapan';
+                return `
                 <a href="/student/${s.id}" class="student-card">
                     <div>
                         <div class="card-top">
@@ -164,25 +180,25 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <p class="card-motto">"${s.motto}"</p>
+                            <p class="card-motto">"${s.motto || 'Terus melangkah pantang menyerah'}"</p>
                             <div class="card-tags">
                                 <div class="card-tag-item">
                                     <span class="icon">🎯</span>
-                                    <span class="text">${s.dream}</span>
+                                    <span class="text">${s.dream || 'Inovator'}</span>
                                 </div>
                                 <div class="card-tag-item">
                                     <span class="icon">🏛️</span>
-                                    <span class="text">${s.targetUniv} (${s.targetMajor})</span>
+                                    <span class="text">${univ} (${major})</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="card-footer">
-                        <span>${s.mbti} • ${s.zodiac}</span>
+                        <span>${s.mbti || '12F'} • ${s.zodiac || 'IPAS'}</span>
                         <span class="card-view-link">Profil Detail →</span>
                     </div>
                 </a>
-            `).join('');
+            `}).join('');
         }
 
         window.addEventListener('DOMContentLoaded', fetchStudents);
