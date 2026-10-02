@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12F IPAS - SMAN 1 Jogorogo • Angkatan 2026</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="brand-wrapper">
+                <div class="brand-icon">🔬</div>
+                <div class="brand-text">
+                    <h1>12F IPAS</h1>
+                    <span>SMAN 1 JOGOROGO • 2026</span>
+                </div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/" class="active">🏠 Beranda</a></li>
+                    <li><a href="/about">📖 Tentang</a></li>
+                    <li><a href="/students">👥 Siswa</a></li>
+                    <li><a href="/gallery">📸 Galeri</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="/students" class="btn-pill btn-pill-primary">Eksplor Siswa →</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero-section">
+            <div class="hero-badge">🌟 KELAS UNGGULAN SAINS TERAPAN 2026</div>
+            <h1 class="hero-title">Satu Visi, 33 Mimpi, <span class="highlight">Menembus Batas</span></h1>
+            <p class="hero-subtitle">
+                Portal resmi Kelas 12F IPAS SMAN 1 Jogorogo. Rumah bagi para pembelajar tangguh, calon dokter, programmer, insinyur, dan pemimpin masa depan.
+            </p>
+            <div class="hero-actions">
+                <a href="/students" class="btn-pill btn-pill-primary" style="padding: 0.85rem 1.75rem;">👥 Lihat 33 Profil Siswa</a>
+                <a href="/about" class="btn-pill btn-pill-ghost" style="padding: 0.85rem 1.5rem;">📖 Cerita & Visi Kelas</a>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">33</span>
+                    <span class="stat-label">Siswa Berbakat</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Target Kampus Impian</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">1</span>
+                    <span class="stat-label">Keluarga Solid 12F</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">∞</span
+                    ><span class="stat-label">Kenangan Abadi</span>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin: 4rem 0;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <div class="page-badge">👥 Sorotan Siswa</div>
+                    <h2 class="page-title" style="font-size: 2rem; margin: 0.5rem 0 0.25rem;">Kenali Rekan <span class="highlight">12F IPAS</span></h2>
+                    <p style="color: var(--text-muted); margin: 0;">Buka profil lengkap untuk kartu pelajar digital & Wall of Cheers.</p>
+                </div>
+                <a href="/students" class="btn-pill btn-pill-accent">Semua Siswa (33) →</a>
+            </div>
+            <div id="previewGrid" class="students-grid"></div>
+        </section>
+
+        <section class="quote-container">
+            <p class="quote-text">"Pendidikan bukan sekadar mengisi wadah, melainkan menyalakan api semangat keilmuan dan persaudaraan."</p>
+            <div class="quote-author">— Keluarga Besar 12F IPAS SMAN 1 Jogorogo</div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Kelas 12F IPAS • SMAN 1 Jogorogo</h3>
+                <p>Generasi Emas Sains Terapan & Inovasi Masa Depan Angkatan 2026</p>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 12F IPAS SMAN 1 Jogorogo. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        fetch('/api/students')
+            .then(res => res.json())
+            .then(students => {
+                const preview = document.getElementById('previewGrid');
+                preview.innerHTML = students.slice(0, 6).map(s => `
+                    <a href="/student/${s.id}" class="student-card">
+                        <div>
+                            <div class="card-top">
+                                <div class="card-avatar">${s.name.charAt(0)}</div>
+                                <div class="card-meta">
+                                    <span class="card-role-badge">${s.role}</span>
+                                    <h3 class="card-name">${s.name}</h3>
+                                    <span class="card-nickname">"${s.nickname}" • Absen #${s.id.toString().padStart(2, '0')}</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-motto">"${s.motto}"</p>
+                                <div class="card-tags">
+                                    <div class="card-tag-item"><span class="icon">🎯</span><span class="text">${s.dream}</span></div>
+                                    <div class="card-tag-item"><span class="icon">🏛️</span><span class="text">${s.targetUniv}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span>${s.mbti} • ${s.zodiac}</span>
+                            <span class="card-view-link">Profil Detail →</span>
+                        </div>
+                    </a>
+                `).join('');
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "sman1-jogorogo",
+  "version": "1.0.0",
+  "description": "Portal Resmi Kelas 12F IPAS SMAN 1 Jogorogo Angkatan 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-suite.js",
+    "build:css": "node compile-css.js"
+  },
+  "keywords": [
+    "sman1-jogorogo",
+    "bento-ui",
+    "dark-frost"
+  ],
+  "author": "12F IPAS SMAN 1 Jogorogo",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

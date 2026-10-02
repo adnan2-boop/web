@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/student/(.*)", "destination": "/student-detail.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/gallery", "destination": "/gallery.html" },
+    { "source": "/students", "destination": "/students.html" },
+    { "source": "/(.*)", "destination": "/api/index.js" }
+  ]
+}

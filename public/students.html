@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direktori Siswa - 12F IPAS SMAN 1 Jogorogo</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👥</text></svg>">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="brand-wrapper">
+                <div class="brand-icon">🔬</div>
+                <div class="brand-text">
+                    <h1>12F IPAS</h1>
+                    <span>SMAN 1 JOGOROGO • 2026</span>
+                </div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/">🏠 Beranda</a></li>
+                    <li><a href="/about">📖 Tentang</a></li>
+                    <li><a href="/students" class="active">👥 Siswa</a></li>
+                    <li><a href="/gallery">📸 Galeri</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <button class="btn-pill btn-pill-primary" onclick="pickRandomStudent()">🎲 Acak Siswa</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header-box">
+            <div class="page-badge">✨ Direktori Angkatan 2026</div>
+            <h1 class="page-title">Profil & Ambisi Siswa <span class="highlight">12F IPAS</span></h1>
+            <p class="page-subtitle">33 talenta sains terapan dengan mimpi besar menembus kampus impian dan mengukir karya nyata.</p>
+        </div>
+
+        <section class="controls-bar">
+            <div class="search-row">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Cari nama, panggilan, kampus impian, atau cita-cita..." oninput="handleSearch()">
+                </div>
+                <button class="btn-pill btn-pill-ghost" onclick="resetFilters()">Reset</button>
+            </div>
+
+            <div class="filter-pills-row" id="filterPills">
+                <button class="filter-pill active" onclick="setCategory('all', this)">🌐 Semua (33)</button>
+                <button class="filter-pill" onclick="setCategory('pengurus', this)">👑 Pengurus Kelas</button>
+                <button class="filter-pill" onclick="setCategory('medis', this)">🩺 Medis & Kesehatan</button>
+                <button class="filter-pill" onclick="setCategory('tech', this)">💻 Tech & Komputasi</button>
+                <button class="filter-pill" onclick="setCategory('sains', this)">🔬 Sains & Riset</button>
+                <button class="filter-pill" onclick="setCategory('seni', this)">🎨 Seni & Desain</button>
+                <button class="filter-pill" onclick="setCategory('sosial', this)">⚖️ Hukum & Bisnis</button>
+            </div>
+
+            <div class="controls-meta">
+                <span id="resultCount">Memuat daftar siswa...</span>
+                <span style="font-size: 0.8rem; color: var(--text-dim);">💡 Klik pada kartu untuk membuka profil detail</span>
+            </div>
+        </section>
+
+        <section id="studentsGrid" class="students-grid">
+            <!-- Student cards will be loaded here -->
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Kelas 12F IPAS • SMAN 1 Jogorogo</h3>
+                <p>Generasi Emas Sains Terapan & Inovasi Masa Depan Angkatan 2026</p>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 12F IPAS SMAN 1 Jogorogo. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let allStudents = [];
+        let activeCategory = 'all';
+
+        async function fetchStudents() {
+            try {
+                const res = await fetch('/api/students');
+                allStudents = await res.json();
+                renderStudents(allStudents);
+            } catch (err) {
+                console.error('Error loading students:', err);
+                document.getElementById('studentsGrid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">Gagal memuat data siswa.</div>';
+            }
+        }
+
+        function setCategory(cat, btn) {
+            activeCategory = cat;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            handleSearch();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            setCategory('all', document.querySelector('.filter-pill'));
+        }
+
+        function pickRandomStudent() {
+            if (!allStudents.length) return;
+            const rand = allStudents[Math.floor(Math.random() * allStudents.length)];
+            window.location.href = `/student/${rand.id}`;
+        }
+
+        function matchesCategory(student, cat) {
+            if (cat === 'all') return true;
+            const text = (student.role + ' ' + student.dream + ' ' + student.targetMajor).toLowerCase();
+            if (cat === 'pengurus') return !student.role.includes('Anggota');
+            if (cat === 'medis') return /dokter|farmasi|gizi|kesehatan|fisioterapi|medis/.test(text);
+            if (cat === 'tech') return /software|informatika|ai|it|robotika|game|sistem/.test(text);
+            if (cat === 'sains') return /bioteknologi|astronomi|fisika|kimia|biologi|riset|lingkungan/.test(text);
+            if (cat === 'seni') return /arsitek|desain|animasi|sinematografi|musik/.test(text);
+            if (cat === 'sosial') return /hukum|bisnis|manajemen|diplomat|psikologi|ekonomi/.test(text);
+            return true;
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filtered = allStudents.filter(s => {
+                if (!matchesCategory(s, activeCategory)) return false;
+                if (!query) return true;
+                const pool = (s.name + ' ' + s.nickname + ' ' + s.dream + ' ' + s.targetUniv + ' ' + s.targetMajor + ' ' + s.mbti).toLowerCase();
+                return pool.includes(query);
+            });
+            renderStudents(filtered);
+        }
+
+        function renderStudents(list) {
+            const grid = document.getElementById('studentsGrid');
+            const counter = document.getElementById('resultCount');
+            counter.textContent = `Menampilkan ${list.length} dari ${allStudents.length} Siswa`;
+
+            if (list.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-xl);">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+                        <h3 style="color: var(--text-pure); font-size: 1.25rem;">Tidak ada siswa yang cocok</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Coba gunakan kata kunci pencarian atau kategori lain.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = list.map(s => `
+                <a href="/student/${s.id}" class="student-card">
+                    <div>
+                        <div class="card-top">
+                            <div class="card-avatar">${s.name.charAt(0)}</div>
+                            <div class="card-meta">
+                                <span class="card-role-badge">${s.role}</span>
+                                <h3 class="card-name">${s.name}</h3>
+                                <span class="card-nickname">"${s.nickname}" • Absen #${s.id.toString().padStart(2, '0')}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-motto">"${s.motto}"</p>
+                            <div class="card-tags">
+                                <div class="card-tag-item">
+                                    <span class="icon">🎯</span>
+                                    <span class="text">${s.dream}</span>
+                                </div>
+                                <div class="card-tag-item">
+                                    <span class="icon">🏛️</span>
+                                    <span class="text">${s.targetUniv} (${s.targetMajor})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span>${s.mbti} • ${s.zodiac}</span>
+                        <span class="card-view-link">Profil Detail →</span>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchStudents);
+    </script>
+</body>
+</html>

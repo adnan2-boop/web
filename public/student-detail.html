@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Siswa - 12F IPAS SMAN 1 Jogorogo</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="brand-wrapper">
+                <div class="brand-icon">🔬</div>
+                <div class="brand-text">
+                    <h1>12F IPAS</h1>
+                    <span>SMAN 1 JOGOROGO • 2026</span>
+                </div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/">🏠 Beranda</a></li>
+                    <li><a href="/about">📖 Tentang</a></li>
+                    <li><a href="/students" class="active">👥 Siswa</a></li>
+                    <li><a href="/gallery">📸 Galeri</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="/students" class="btn-pill btn-pill-ghost">← Direktori</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="loadingState" style="text-align: center; padding: 4rem 1rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem; animation: pulseGlow 1.5s infinite;">✨</div>
+            <h2 style="color: var(--text-pure); font-size: 1.6rem; font-family: var(--font-heading);">Menyiapkan Profil Siswa 12F...</h2>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Memuat roadmap kampus impian, fun facts, & kenangan...</p>
+        </div>
+
+        <div id="profileContainer" style="display: none;">
+            <div class="detail-top-nav">
+                <a href="/students" class="btn-pill btn-pill-ghost">
+                    <span>←</span> Semua Siswa
+                </a>
+                <div class="detail-nav-actions" id="prevNextNav"></div>
+            </div>
+
+            <div id="heroCardWrapper"></div>
+            <div class="profile-bento-grid" id="bentoGridWrapper"></div>
+        </div>
+    </main>
+
+    <div class="modal-backdrop" id="idCardModal" onclick="handleBackdropClick(event)">
+        <div class="id-card-modal">
+            <button class="modal-close-btn" onclick="closeIdCardModal()">✕</button>
+            <div id="idCardContent"></div>
+        </div>
+    </div>
+
+    <div class="toast-notice" id="toastNotice">
+        <span id="toastIcon">✨</span>
+        <span id="toastMsg">Tautan profil berhasil disalin!</span>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Kelas 12F IPAS • SMAN 1 Jogorogo</h3>
+                <p>Generasi Emas Sains Terapan & Inovasi Masa Depan Angkatan 2026</p>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 12F IPAS SMAN 1 Jogorogo. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentStudent = null;
+        let selectedEmoji = '🔥';
+
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        const studentId = pathSegments[pathSegments.length - 1];
+
+        function showToast(message, icon = '✨') {
+            const toast = document.getElementById('toastNotice');
+            document.getElementById('toastMsg').textContent = message;
+            document.getElementById('toastIcon').textContent = icon;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3200);
+        }
+
+        function copyProfileLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('Tautan profil ' + (currentStudent ? currentStudent.nickname : '') + ' berhasil disalin!', '🔗');
+            }).catch(() => { showToast('Gagal menyalin link.', '⚠️'); });
+        }
+
+        function openIdCardModal() {
+            if (!currentStudent) return;
+            const content = document.getElementById('idCardContent');
+            content.innerHTML = `
+                <div style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.25rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-cyan); font-weight: 800; letter-spacing: 0.1em;">SMAN 1 JOGOROGO • KARTU PELAJAR DIGITAL</div>
+                    <h3 style="font-family: var(--font-heading); color: var(--text-pure); font-size: 1.3rem; margin-top: 0.2rem;">ANGKATAN 2026 • KELAS 12F IPAS</h3>
+                </div>
+                <div style="display: flex; gap: 1.25rem; align-items: center; margin-bottom: 1.25rem;">
+                    <div style="width: 74px; height: 74px; border-radius: 20px; background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; color: white; box-shadow: 0 4px 15px rgba(99,102,241,0.4);">
+                        ${currentStudent.name.charAt(0)}
+                    </div>
+                    <div>
+                        <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--text-pure); font-weight: 800;">${currentStudent.name}</h4>
+                        <p style="color: var(--accent-cyan); font-size: 0.85rem; font-weight: 600;">${currentStudent.role}</p>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-mono); margin-top: 0.2rem;">NISN: ${currentStudent.nisn || '0097' + currentStudent.id.toString().padStart(6, '0')} • ABSEN #${currentStudent.id.toString().padStart(2, '0')}</p>
+                        <p style="color: var(--text-dim); font-size: 0.75rem; margin-top: 0.1rem;">📍 Lahir: ${currentStudent.birthPlace || 'Ngawi'}, ${currentStudent.birthDate || currentStudent.birthdate}</p>
+                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                    <strong style="color: var(--text-pure);">Cita-cita & Kampus Target:</strong> ${currentStudent.dream} — <span style="color: #a5b4fc;">${currentStudent.targetUniv} (${currentStudent.targetMajor})</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.75rem; border-top: 1px dashed rgba(255,255,255,0.15);">
+                    <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim);">||||| |||| |||||| |||| |||||</div>
+                    <button class="btn-pill btn-pill-primary" onclick="window.print()">🖨️ Cetak / Simpan</button>
+                </div>
+            `;
+            document.getElementById('idCardModal').classList.add('open');
+        }
+
+        function closeIdCardModal() { document.getElementById('idCardModal').classList.remove('open'); }
+        function handleBackdropClick(e) { if (e.target.id === 'idCardModal') closeIdCardModal(); }
+        function setEmoji(emoji, btn) {
+            selectedEmoji = emoji;
+            document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        async function submitCheerMessage(event) {
+            event.preventDefault();
+            const senderName = document.getElementById('cheerSender').value.trim();
+            const senderRole = document.getElementById('cheerRole').value;
+            const message = document.getElementById('cheerMessage').value.trim();
+
+            if (!senderName || !message) {
+                showToast('Mohon isi nama dan pesan dukungan!', '⚠️');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/students/${studentId}/cheers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender: senderName,
+                        senderName: senderName,
+                        role: senderRole,
+                        senderRole: senderRole,
+                        reactionEmoji: selectedEmoji,
+                        emoji: selectedEmoji,
+                        message: message,
+                        text: message
+                    })
+                });
+
+                if (response.ok) {
+                    const resData = await response.json();
+                    const newCheer = resData.cheer || resData.message || {
+                        sender: senderName,
+                        role: senderRole,
+                        reactionEmoji: selectedEmoji,
+                        message: message,
+                        timestamp: 'Baru saja'
+                    };
+                    if (!currentStudent.cheers) currentStudent.cheers = [];
+                    currentStudent.cheers.unshift(newCheer);
+                    renderCheersList(currentStudent.cheers);
+                    document.getElementById('cheerMessage').value = '';
+                    showToast('Pesan semangat berhasil dikirim untuk ' + currentStudent.nickname + '! 🎉', '💌');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Gagal mengirim pesan.', '❌');
+            }
+        }
+
+        function renderCheersList(cheers) {
+            const list = document.getElementById('cheersFeed');
+            if (!list) return;
+            if (!cheers || cheers.length === 0) {
+                list.innerHTML = `<div style="text-align: center; color: var(--text-dim); padding: 1.5rem; font-size: 0.9rem;">Belum ada pesan untuk ${currentStudent.nickname}. Jadilah yang pertama memberi semangat! ✨</div>`;
+                return;
+            }
+
+            list.innerHTML = cheers.map(c => {
+                const sName = c.sender || c.senderName || 'Sahabat 12F';
+                const sRole = c.role || c.senderRole || 'Teman Sekelas';
+                const sEmoji = c.reactionEmoji || c.emoji || '🔥';
+                const sMsg = c.message || c.text || '';
+                const sTime = c.timestamp || 'Baru saja';
+
+                return `
+                    <div class="cheer-message-card">
+                        <div class="cheer-header">
+                            <div class="cheer-sender">
+                                <span style="font-size: 1.15rem;">${sEmoji}</span>
+                                <strong>${sName}</strong>
+                                <span class="sender-role">${sRole}</span>
+                            </div>
+                            <div class="cheer-time">${sTime}</div>
+                        </div>
+                        <div class="cheer-text">${sMsg}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadStudentProfile() {
+            try {
+                const res = await fetch(`/api/students/${studentId}`);
+                if (!res.ok) throw new Error('Data siswa tidak ditemukan');
+                const data = await res.json();
+                currentStudent = data.student;
+
+                document.title = `${currentStudent.name} - 12F IPAS SMAN 1 Jogorogo`;
+
+                // Render Prev / Next Navigation
+                const navBox = document.getElementById('prevNextNav');
+                navBox.innerHTML = `
+                    ${data.prevStudent ? `<a href="/student/${data.prevStudent.id}" class="btn-pill btn-pill-ghost" title="${data.prevStudent.name}">← ${data.prevStudent.nickname}</a>` : ''}
+                    <button class="btn-pill btn-pill-ghost" onclick="copyProfileLink()">🔗 Salin Link</button>
+                    ${data.nextStudent ? `<a href="/student/${data.nextStudent.id}" class="btn-pill btn-pill-ghost" title="${data.nextStudent.name}">${data.nextStudent.nickname} →</a>` : ''}
+                `;
+
+                // Render Hero Card
+                const hero = document.getElementById('heroCardWrapper');
+                const igUser = (currentStudent.social && currentStudent.social.instagram) ? currentStudent.social.instagram.replace('@', '') : (currentStudent.instagram ? currentStudent.instagram.replace('@', '') : '');
+                
+                hero.innerHTML = `
+                    <div class="profile-hero-card">
+                        <div class="profile-hero-layout">
+                            <div class="profile-avatar-wrapper">
+                                <div class="profile-large-avatar">${currentStudent.name.charAt(0)}</div>
+                                <div class="profile-status-badge" title="Aktif di Kelas 12F IPAS"></div>
+                            </div>
+                            <div class="profile-hero-meta">
+                                <div class="profile-badges-row">
+                                    <span class="badge-role">${currentStudent.role}</span>
+                                    <span class="badge-absen">ABSEN #${currentStudent.id.toString().padStart(2, '0')}</span>
+                                    <span class="badge-mbti">${currentStudent.mbti} • ${currentStudent.zodiac}</span>
+                                </div>
+                                <h1 class="profile-full-name">${currentStudent.name} <span style="font-size: 1.2rem; color: var(--accent-cyan); font-weight: 600;">("${currentStudent.nickname}")</span></h1>
+                                <p class="profile-tagline">💭 "${currentStudent.motto}"</p>
+                                <div class="profile-quick-actions">
+                                    <a href="https://instagram.com/${igUser}" target="_blank" rel="noopener noreferrer" class="btn-pill btn-pill-accent">
+                                        📸 @${igUser}
+                                    </a>
+                                    <button class="btn-pill btn-pill-primary" onclick="openIdCardModal()">
+                                        📇 Kartu Pelajar Digital
+                                    </button>
+                                    <button class="btn-pill btn-pill-ghost" onclick="copyProfileLink()">
+                                        ✨ Bagikan Profil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const bento = document.getElementById('bentoGridWrapper');
+                const uniName = currentStudent.targetUni || currentStudent.targetUniv || 'Perguruan Tinggi Negeri';
+                const subject = currentStudent.favSubject || currentStudent.favoriteSubject || 'Biologi & Sains Terapan';
+                const song = currentStudent.favSong || (currentStudent.favoriteSong ? (currentStudent.favoriteSong.title + ' - ' + currentStudent.favoriteSong.artist) : '12F Energy Playlist');
+
+                bento.innerHTML = `
+                    <div class="bento-box bento-col-8">
+                        <div class="bento-box-header">
+                            <div class="bento-box-title">🎯 Roadmap & Target Masa Depan</div>
+                            <span class="filter-pill active" style="font-size: 0.75rem;">🌟 Ambisi 2026</span>
+                        </div>
+                        <div class="dream-highlight-box">
+                            <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Profesi & Cita-cita Utama</div>
+                            <div class="dream-career-title">${currentStudent.dream}</div>
+                            <div class="dream-uni-target">🏛️ Target Kampus: <strong>${uniName}</strong> (${currentStudent.targetMajor})</div>
+                        </div>
+                        <div class="info-rows-list">
+                            <div class="info-row-item">
+                                <span class="info-row-label">📖 Mapel Favorit</span>
+                                <span class="info-row-value">${subject}</span>
+                            </div>
+                            <div class="info-row-item">
+                                <span class="info-row-label">⚡ Bio & Karakter</span>
+                                <span class="info-row-value">${currentStudent.bio || 'Pelajar berdedikasi tinggi'}</span>
+                            </div>
+                            <div class="info-row-item">
+                                <span class="info-row-label">💡 Dikenal Sebagai</span>
+                                <span class="info-row-value" style="color: var(--accent-cyan);">"${currentStudent.knownFor || 'Sosok solid dan inspiratif'}"</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-box bento-col-4">
+                        <div class="bento-box-header">
+                            <div class="bento-box-title">🎵 Lagu Semangat</div>
+                            <span style="font-size: 0.75rem; color: #1db954; font-weight: 700;">Spotify</span>
+                        </div>
+                        <div class="spotify-mock-widget">
+                            <div class="spotify-art">🎧</div>
+                            <div class="spotify-info">
+                                <div class="spotify-track-name">${song}</div>
+                                <div class="spotify-artist">Playlist Favorit ${currentStudent.nickname}</div>
+                                <div class="sound-bars">
+                                    <div class="sound-bar"></div>
+                                    <div class="sound-bar"></div>
+                                    <div class="sound-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.85rem;">
+                            <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.25rem;">Hobi:</div>
+                            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-pure);">🏄 ${currentStudent.hobby}</div>
+                        </div>
+                    </div>
+`;
+
+                bento.innerHTML += `
+                    <div class="bento-box bento-col-4">
+                        <div class="bento-box-header">
+                            <div class="bento-box-title">🧬 Karakter & Vibe</div>
+                        </div>
+                        <div class="info-rows-list">
+                            <div class="info-row-item">
+                                <span class="info-row-label">🧠 MBTI</span>
+                                <span class="info-row-value" style="color: #c084fc;">${currentStudent.mbti}</span>
+                            </div>
+                            <div class="info-row-item">
+                                <span class="info-row-label">♈ Zodiak</span>
+                                <span class="info-row-value">${currentStudent.zodiac}</span>
+                            </div>
+                            <div class="info-row-item">
+                                <span class="info-row-label">🎂 Ultah</span>
+                                <span class="info-row-value">${currentStudent.birthDate || '2008'}</span>
+                            </div>
+                            <div class="info-row-item">
+                                <span class="info-row-label">👑 Peran</span>
+                                <span class="info-row-value" style="color: #a5b4fc;">${currentStudent.role}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-box bento-col-8">
+                        <div class="bento-box-header">
+                            <div class="bento-box-title">💡 3 Fun Facts Unik</div>
+                            <span style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700;">✨ Trivia 12F</span>
+                        </div>
+                        <div class="fun-facts-list">
+                            ${(currentStudent.funFacts || [
+                                'Sering jadi tempat konsultasi tugas teman sekelas.',
+                                'Selalu bawa bekal dan berbagi snack pas istirahat.',
+                                'Punya tekad baja lolos SNBP / UTBK 2026!'
+                            ]).map((fact, idx) => `
+                                <div class="fun-fact-item">
+                                    <div class="fun-fact-number">#${idx + 1}</div>
+                                    <div class="fun-fact-text">${fact}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="bento-box bento-col-12">
+                        <div class="bento-box-header">
+                            <div class="bento-box-title">🛠️ Skill & Keahlian Unggulan</div>
+                        </div>
+                        <div class="skills-wrap">
+                            ${(currentStudent.skills || ['Leadership', 'Problem Solving', 'Teamwork', 'Critical Thinking']).map(skill => `
+                                <span class="skill-tag">⚡ ${skill}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+`;
+
+                bento.innerHTML += `
+                    <div class="bento-box bento-col-12">
+                        <div class="bento-box-header">
+                            <div class="bento-box-title">💌 Wall of Cheers • Pesan Sahabat 12F</div>
+                            <span style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600;">Kirim semangat untuk ${currentStudent.nickname}!</span>
+                        </div>
+                        <div class="cheers-container">
+                            <form class="cheers-form" onsubmit="submitCheerMessage(event)">
+                                <div class="cheers-form-row">
+                                    <input type="text" id="cheerSender" class="form-input" placeholder="Nama kamu..." required>
+                                    <select id="cheerRole" class="form-input" style="background: rgba(16,22,36,0.9); color: white;">
+                                        <option value="Teman Sekelas">👥 Teman Sekelas</option>
+                                        <option value="Adik Kelas">🌱 Adik Kelas</option>
+                                        <option value="Alumni SMAN 1">🎓 Alumni SMAN 1</option>
+                                        <option value="Guru / Wali">📚 Guru / Wali</option>
+                                        <option value="Secret Admirer">💖 Secret Admirer</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                                    <div class="cheers-emoji-picker">
+                                        <span style="font-size: 0.8rem; color: var(--text-dim);">Reaksi:</span>
+                                        <button type="button" class="emoji-btn active" onclick="setEmoji('🔥', this)">🔥</button>
+                                        <button type="button" class="emoji-btn" onclick="setEmoji('💖', this)">💖</button>
+                                        <button type="button" class="emoji-btn" onclick="setEmoji('🚀', this)">🚀</button>
+                                        <button type="button" class="emoji-btn" onclick="setEmoji('👑', this)">👑</button>
+                                        <button type="button" class="emoji-btn" onclick="setEmoji('✨', this)">✨</button>
+                                    </div>
+                                    <button type="submit" class="btn-pill btn-pill-primary">Kirim Pesan ✨</button>
+                                </div>
+                                <textarea id="cheerMessage" class="form-input" rows="2" placeholder="Tulis pesan penyemangat..." required></textarea>
+                            </form>
+                            <div class="cheers-list" id="cheersFeed"></div>
+                        </div>
+                    </div>
+                `;
+
+                renderCheersList(currentStudent.cheers || []);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('profileContainer').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingState').innerHTML = `
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-xl); padding: 3rem 1.5rem; max-width: 500px; margin: 2rem auto; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                        <h2 style="color: var(--text-pure); font-size: 1.5rem; font-family: var(--font-heading);">Siswa Tidak Ditemukan</h2>
+                        <p style="color: var(--text-muted); margin: 0.75rem 0 1.5rem;">Data siswa tidak ditemukan dalam direktori kelas 12F IPAS.</p>
+                        <a href="/students" class="btn-pill btn-pill-primary">← Direktori Siswa</a>
+                    </div>
+                `;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadStudentProfile);
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Memori - 12F IPAS SMAN 1 Jogorogo</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="brand-wrapper">
+                <div class="brand-icon">🔬</div>
+                <div class="brand-text">
+                    <h1>12F IPAS</h1>
+                    <span>SMAN 1 JOGOROGO • 2026</span>
+                </div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/">🏠 Beranda</a></li>
+                    <li><a href="/about">📖 Tentang</a></li>
+                    <li><a href="/students">👥 Siswa</a></li>
+                    <li><a href="/gallery" class="active">📸 Galeri</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="/students" class="btn-pill btn-pill-primary">Eksplor Siswa →</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header-box">
+            <div class="page-badge">📸 Album Kenangan 2023 - 2026</div>
+            <h1 class="page-title">Galeri Momen Berharga <span class="highlight">12F IPAS</span></h1>
+            <p class="page-subtitle">Kumpulan jejak langkah, tawa, perjuangan praktikum, dan kebersamaan yang takkan terlupakan.</p>
+        </div>
+
+        <section class="gallery-grid" id="galleryGrid">
+            <!-- Rendered by script -->
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Kelas 12F IPAS • SMAN 1 Jogorogo</h3>
+                <p>Generasi Emas Sains Terapan & Inovasi Masa Depan Angkatan 2026</p>
+            </div>
+            <div class="footer-copy">
+                &copy; 2026 12F IPAS SMAN 1 Jogorogo. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const galleryItems = [
+            { icon: '📸', title: 'Foto Formasi Angkatan', desc: 'Sesi dokumentasi tahunan 33 siswa lengkap bersama wali kelas.', tag: 'Kenangan' },
+            { icon: '🔬', title: 'Praktikum Bioteknologi', desc: 'Eksperimen mikroskopis kultur jaringan di Laboratorium Biologi.', tag: 'Akademik' },
+            { icon: '🏆', title: 'Juara Lomba Lingkungan', desc: 'Trofi kebersihan & tata ruang kelas paling kreatif sekolah.', tag: 'Prestasi' },
+            { icon: '🎭', title: 'Pentas Seni & Budaya', desc: 'Kolaborasi teater musikal dan tari kreasi khas Jogorogo.', tag: 'Kreativitas' },
+            { icon: '🏕️', title: 'Outdoor Study & Camp', desc: 'Eksplorasi ekosistem lereng Gunung Lawu dan keakraban kelas.', tag: 'Outdoor' },
+            { icon: '📚', title: 'Sesi Belajar Bersama UTBK', desc: 'Bedah soal SNBT dan saling tutor sebaya materi skolastik.', tag: 'Belajar' },
+            { icon: '🎉', title: 'Perayaan Ulang Tahun Teman', desc: 'Tradisi surprise ulang tahun dan makan bersama sekelas.', tag: 'Solidaritas' },
+            { icon: '🏃', title: 'Classmeeting & Olahraga', desc: 'Turnamen futsal dan basket antar kelas yang penuh antusiasme.', tag: 'Sport' },
+            { icon: '🎓', title: 'Persiapan Menuju Wisuda', desc: 'Langkah akhir menjelang gerbang perguruan tinggi impian.', tag: 'Masa Depan' }
+        ];
+
+        const container = document.getElementById('galleryGrid');
+        container.innerHTML = galleryItems.map(item => `
+            <div class="gallery-card">
+                <div class="gallery-icon-holder">
+                    <span style="font-size: 3.25rem;">${item.icon}</span>
+                </div>
+                <div class="gallery-body">
+                    <span class="gallery-tag">${item.tag}</span>
+                    <h3 class="gallery-title">${item.title}</h3>
+                    <p class="gallery-desc">${item.desc}</p>
+                </div>
+            </div>
+        `).join('');
+    </script>
+</body>
+</html>
